@@ -13,5 +13,6 @@ data class User(
     val email: String,
     val password: String,
     val fullName: String = "",
-    val profilePicture: String = ""
-) 
+    val profilePicture: String = "",
+    val token: String = ""
+)

@@ -1,6 +1,5 @@
 package com.example.dacs3.ui.viewmodels
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dacs3.data.User
@@ -8,7 +7,6 @@ import com.example.dacs3.data.UserDao
 import com.example.dacs3.data.UserPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 sealed class AuthEvent {
@@ -26,12 +24,16 @@ class AuthViewModel(
     private val _authEvent = MutableStateFlow<AuthEvent?>(null)
     val authEvent: StateFlow<AuthEvent?> = _authEvent
 
+    private val _accessToken = MutableStateFlow<String?>(null)
+    val accessToken: StateFlow<String?> = _accessToken
+
     init {
         viewModelScope.launch {
-            // Check for saved user session
+            // Kiểm tra user đã lưu trước đó
             userPreferences.getUserFlow().collect { user ->
                 user?.let {
                     _authState.value = AuthState.Success(it)
+                    _accessToken.value = it.token // Lấy token từ user đã đăng nhập trước đó
                 }
             }
         }
@@ -40,7 +42,6 @@ class AuthViewModel(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                // Clear any previous events
                 _authEvent.value = null
                 val user = userDao.login(email, password)
                 if (user != null) {
@@ -63,14 +64,20 @@ class AuthViewModel(
                     return@launch
                 }
 
+                // Giả sử server sẽ cung cấp token sau khi đăng ký
+                val accessToken = fetchAccessTokenFromServer(email, password)
+
                 val user = User(
                     username = username,
                     email = email,
-                    password = password
+                    password = password,
+                    token = accessToken
                 )
+
                 userDao.insertUser(user)
                 userPreferences.saveUser(user)
                 _authState.value = AuthState.Success(user)
+                _accessToken.value = accessToken // Cập nhật token
             } catch (e: Exception) {
                 _authEvent.value = AuthEvent.ShowError(e.message ?: "Unknown error")
             }
@@ -82,6 +89,7 @@ class AuthViewModel(
             try {
                 userPreferences.clearUser()
                 _authState.value = AuthState.Initial
+                _accessToken.value = null
                 _authEvent.value = AuthEvent.NavigateToLogin
             } catch (e: Exception) {
                 _authEvent.value = AuthEvent.ShowError("Failed to logout: ${e.message}")
@@ -97,9 +105,15 @@ class AuthViewModel(
         try {
             userPreferences.saveUser(user)
             _authState.value = AuthState.Success(user)
+            _accessToken.value = user.token // Cập nhật token khi đăng nhập
         } catch (e: Exception) {
             _authEvent.value = AuthEvent.ShowError("Failed to save user session: ${e.message}")
         }
+    }
+
+    private suspend fun fetchAccessTokenFromServer(email: String, password: String): String {
+        // Giả lập lấy token từ server
+        return "fake_access_token_${email.hashCode()}"
     }
 }
 
@@ -107,4 +121,4 @@ sealed class AuthState {
     object Initial : AuthState()
     data class Success(val user: User) : AuthState()
     data class Error(val message: String) : AuthState()
-} 
+}
