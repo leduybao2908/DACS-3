@@ -56,6 +56,9 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.messaging)
     val roomVersion = "2.6.1"
     val navVersion = "2.7.7"
 
@@ -73,25 +76,28 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
-    
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:$navVersion")
-    
+
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    
+
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    
+
     // Kotlin Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    
+
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
-    
+
+    // Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

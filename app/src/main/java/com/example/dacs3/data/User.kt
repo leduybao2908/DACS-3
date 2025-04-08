@@ -8,6 +8,10 @@ data class User(
     val username: String,
     val email: String,
     val password: String = "", // Only used temporarily during registration
-    val fullName: String = "",
+    val name: String = "",
+    val age: String = "",
+    val phone: String = "",
+    val interests: String = "",
+    val city: String = "",
     val profilePicture: String = ""
 )

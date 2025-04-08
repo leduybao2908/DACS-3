@@ -3,8 +3,7 @@ package com.example.dacs3.ui.viewmodels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.dacs3.data.User
-import com.example.dacs3.data.UserPreferences
+import com.example.dacs3.data.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +21,7 @@ class AuthViewModel(
     private val userPreferences: UserPreferences
 ) : ViewModel() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val userDatabase = UserDatabase()
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState: StateFlow<AuthState> = _authState
 
@@ -60,7 +60,7 @@ class AuthViewModel(
                         email = firebaseUser.email ?: "",
                         username = firebaseUser.displayName ?: "",
                         password = "", // We don't store passwords with Firebase Auth
-                        fullName = firebaseUser.displayName ?: "",
+
                         profilePicture = firebaseUser.photoUrl?.toString() ?: ""
                     )
                     handleLoginSuccess(user)
@@ -113,11 +113,22 @@ class AuthViewModel(
                             .build()
                     ).await()
                     
+                    // Create user profile in Realtime Database
+                    val userDatabaseModel = UserDatabaseModel(
+                        uid = firebaseUser.uid,
+                        email = email,
+                        username = username,
+                        fullName = username, // Sử dụng username làm fullName mặc định
+                        createdAt = System.currentTimeMillis(),
+                        isOnline = true
+                    )
+                    userDatabase.createUser(userDatabaseModel)
+
                     val user = User(
                         email = email,
                         username = username,
                         password = "", // We don't store passwords with Firebase Auth
-                        fullName = username
+        
                     )
                     userPreferences.saveUser(user)
                     _authState.value = AuthState.Success(user)
@@ -141,12 +152,75 @@ class AuthViewModel(
     fun logout() {
         viewModelScope.launch {
             try {
+                // Update online status before signing out
+                auth.currentUser?.let { firebaseUser ->
+                    userDatabase.updateUserStatus(firebaseUser.uid, false)
+                }
                 auth.signOut()
                 userPreferences.clearUser()
                 _authState.value = AuthState.Initial
                 _authEvent.value = AuthEvent.NavigateToLogin
             } catch (e: Exception) {
                 _authEvent.value = AuthEvent.ShowError("Failed to logout: ${e.message}")
+            }
+        }
+    }
+
+    fun updateUserProfile(
+        username: String,
+        age: String,
+        phone: String,
+        interests: String,
+        city: String,
+        profilePictureBase64: String?
+    ) {
+        viewModelScope.launch {
+            try {
+                val currentUser = auth.currentUser
+                if (currentUser == null) {
+                    _authEvent.value = AuthEvent.ShowError("User not logged in")
+                    return@launch
+                }
+
+                // Update user profile in Realtime Database
+                val updates = mutableMapOf<String, Any>()
+                
+                // Chỉ thêm các giá trị không null và không rỗng vào updates
+                if (username.isNotBlank()) {
+                    updates["username"] = username
+                    updates["fullName"] = username // Cập nhật fullName cùng với username
+                }
+                if (age.isNotBlank()) updates["age"] = age
+                if (phone.isNotBlank()) updates["phone"] = phone
+                if (interests.isNotBlank()) updates["interests"] = interests
+                if (city.isNotBlank()) updates["city"] = city
+
+                // Add profile picture if provided and not empty
+                if (!profilePictureBase64.isNullOrBlank()) {
+                    updates["profilePicture"] = profilePictureBase64
+                }
+
+                // Update Firebase Auth profile
+                currentUser.updateProfile(
+                    com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                        .setDisplayName(username)
+                        .build()
+                ).await()
+
+                // Update Realtime Database
+                userDatabase.updateUser(currentUser.uid, updates)
+
+                // Update local user data with new information
+                val updatedUser = User(
+                    email = currentUser.email ?: "",
+                    username = username,  // Use the new username
+                    password = "",
+                    profilePicture = profilePictureBase64 ?: ""
+                )
+                handleLoginSuccess(updatedUser)
+
+            } catch (e: Exception) {
+                _authEvent.value = AuthEvent.ShowError("Failed to update profile: ${e.message}")
             }
         }
     }

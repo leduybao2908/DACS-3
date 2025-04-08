@@ -1,28 +1,30 @@
 package com.example.dacs3.ui.screens.profile
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dacs3.ui.viewmodels.*
 import kotlinx.coroutines.launch
-
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToUpdateProfile: () -> Unit = {}
 ) {
     val authState by authViewModel.authState.collectAsState()
     val user = (authState as? AuthState.Success)?.user
@@ -63,7 +65,9 @@ fun ProfileScreen(
             ) {
                 ProfileInfo(
                     username = it.username,
-                    email = it.email
+                    email = it.email,
+                    onEditClick = onNavigateToUpdateProfile,
+                    authState = authState
                 )
             }
         }
@@ -142,7 +146,9 @@ fun ProfileScreen(
 @Composable
 private fun ProfileInfo(
     username: String,
-    email: String
+    email: String,
+    onEditClick: () -> Unit,
+    authState: AuthState
 ) {
     Card(
         modifier = Modifier
@@ -157,20 +163,51 @@ private fun ProfileInfo(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Profile Picture Placeholder
             Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.size(60.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                val user = (authState as? AuthState.Success)?.user
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (user?.profilePicture?.isNotEmpty() == true) {
+                        val imageBytes = android.util.Base64.decode(user.profilePicture, android.util.Base64.DEFAULT)
+                        val bitmap = android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.size(60.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+                
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(end = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Profile",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
             // User Info
@@ -230,4 +267,4 @@ private fun InfoRow(
             )
         }
     }
-} 
+}
