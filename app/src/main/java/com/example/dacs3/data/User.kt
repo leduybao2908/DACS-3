@@ -1,18 +1,17 @@
 package com.example.dacs3.data
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-@Entity(tableName = "users")
 data class User(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val uid: String = "",
     val username: String,
     val email: String,
-    val password: String,
-    val fullName: String = "",
-    val profilePicture: String = "",
-    val token: String = ""
+    val password: String = "", // Only used temporarily during registration
+    val name: String = "",
+    val age: String = "",
+    val phone: String = "",
+    val interests: String = "",
+    val city: String = "",
+    val profilePicture: String = ""
 )
