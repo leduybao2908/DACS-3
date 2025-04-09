@@ -70,7 +70,11 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("org.webrtc:google-webrtc:1.0.32006")
+
     // Firebase BOM is already declared above
+    implementation("com.stringee.sdk.android:stringee-android-sdk:2.0")
+    implementation("com.android.volley:volley:1.2.1")
 
     // Room
     implementation("androidx.room:room-runtime:$roomVersion")
