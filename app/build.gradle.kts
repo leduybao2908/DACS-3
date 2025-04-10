@@ -1,17 +1,50 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
+    id("com.google.devtools.ksp") version "1.9.21-1.0.15" // hoặc bản tương thích Kotlin 2.0
+}
+
+android {
+    namespace = "com.example.dacs3"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.example.dacs3"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.10" // hoặc bản tương thích Kotlin 2.0
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
 dependencies {
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
 
     // Firebase
     implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging.ktx)
-    implementation(libs.firebase.messaging.core)
+    implementation(libs.firebase.messaging)
 
-    // Core
+    // Core & Lifecycle
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Compose
+    // Compose UI
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -21,7 +54,7 @@ dependencies {
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Volley (giữ lại nếu vẫn dùng gọi API)
+    // Volley (tuỳ chọn)
     implementation("com.android.volley:volley:1.2.1")
 
     // Room

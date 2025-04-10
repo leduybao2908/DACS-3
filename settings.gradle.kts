@@ -1,23 +1,24 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
-        maven { url = uri("https://repo.stringee.com/maven/releases/") } // Thêm Stringee repository
+        maven { url = uri("https://repo.stringee.com/maven/releases/") }
     }
 }
+
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS) // Thay FAIL_ON_PROJECT_REPOS thành PREFER_SETTINGS
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://repo.stringee.com/maven/releases/") } // Thêm Stringee repository
+        maven { url = uri("https://repo.stringee.com/maven/releases/") }
+    }
+
+    versionCatalogs {
+        create("libs") {
+            from(files("gradle/libs.versions.toml")) // ✅ Chỉ đúng tại đây!
+        }
     }
 }
 
